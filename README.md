@@ -1,14 +1,5 @@
 A real-time, AI-powered vehicle health monitoring system that predicts failures before they occur. Connects vehicle telemetry (via STM32/CAN bus) to a cloud dashboard, providing actionable insights for Drivers, Mechanics, and Fleet Managers.
-
-Problem & Solution:
-
-    Unexpected breakdowns cost fleets $5k-$15K/year per vehicle.  ->  Predictive Al forecasts failures 2-4 weeks ahead.
-
-    Reactive maintenance leads to safety risks on highways.  ->  Edge-First Safety triggers local alerts even offline.
-
-    Generic fault codes confuse drivers (e.g., "P0300")  -> Explainable Alerts give natural language actions (e.g., "Pull over within 2km").
-        
-
+     
 Feature	Description
 
     Role-Based Dashboards -> Tailored views for Driver, Mechanic, and Fleet Manager
