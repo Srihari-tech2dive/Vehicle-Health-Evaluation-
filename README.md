@@ -13,9 +13,10 @@ Feature	Description
     Glassmorphism Ul -> Modem dark/light theme with smooth Framer Motion animations
 
 Implementation Approach:
-    Edge-First Safety: Critical metrics (Engine Temp, Oil Pressure) evaluated on STM32.
-    Cloud AI Processing: Reinforcement Learning model analyzes historical trends to predict Remaining Useful Life (RUL) of components.
-    Role-Based Access: Strict separation of concerns; Drivers see simplified "Go/No-Go", Mechanics see diagnostic codes, Fleet Managers see analytics.
+
+    Edge-First Safety  -> Critical metrics (Engine Temp, Oil Pressure) evaluated on STM32.
+    Cloud AI Processing  -> Reinforcement Learning model analyzes historical trends to predict Remaining Useful Life (RUL) of components.
+    Role-Based Access  -> Strict separation of concerns; Drivers see simplified "Go/No-Go", Mechanics see diagnostic codes, Fleet Managers see analytics.
     
 Core Framework:
 
