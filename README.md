@@ -1,5 +1,14 @@
 A real-time, AI-powered vehicle health monitoring system that predicts failures before they occur. Connects vehicle telemetry (via STM32/CAN bus) to a cloud dashboard, providing actionable insights for Drivers, Mechanics, and Fleet Managers.
 
+Problem & Solution:
+
+    Unexpected breakdowns cost fleets $5k-$15K/year per vehicle.  ->  Predictive Al forecasts failures 2-4 weeks ahead.
+
+    Reactive maintenance leads to safety risks on highways.  ->  Edge-First Safety triggers local alerts even offline.
+
+    Generic fault codes confuse drivers (e.g., "P0300")  -> Explainable Alerts give natural language actions (e.g., "Pull over within 2km").
+        
+
 Feature	Description
 
     Role-Based Dashboards -> Tailored views for Driver, Mechanic, and Fleet Manager
@@ -12,6 +21,11 @@ Feature	Description
     Edge-First Safety -> STM32 local evaluation for offline-critical alerts
     Glassmorphism Ul -> Modem dark/light theme with smooth Framer Motion animations
 
+Implementation Approach:
+    Edge-First Safety: Critical metrics (Engine Temp, Oil Pressure) evaluated on STM32.
+    Cloud AI Processing: Reinforcement Learning model analyzes historical trends to predict Remaining Useful Life (RUL) of components.
+    Role-Based Access: Strict separation of concerns; Drivers see simplified "Go/No-Go", Mechanics see diagnostic codes, Fleet Managers see analytics.
+    
 Core Framework:
 
     Nextjs -> App Router, Server Components, API Routes
@@ -41,4 +55,4 @@ AI & Machine Learning:
     RL Engine -> Reinforcement leaming for health prediction and pattem recognition
     LLM SDK Integration -> Natural language analysis of uploaded PDF service reports
 
-    
+  
