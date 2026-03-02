@@ -2,41 +2,43 @@ A real-time, AI-powered vehicle health monitoring system that predicts failures 
 
 Feature	Description
 
-Role-Based Dashboards -> Tailored views for Driver, Mechanic, and Fleet Manager
-Real-Time Sync -> Live data updates every 3 seconds via Firebase RTDB
-Predictive Health Al -> Custom RL model forecasts component failures (1-45 days)
-Context-Aware Thresholds -> Adaptive limits for City vs. Highway driving modes
-Explainable Alerts -> Natural-language wamings with actionable guidance
-PDF Service Analysis -> LLM-powered extraction of insights from service reports
-Mechanic Locator -> Interactive OpenStreetMap with specialized shop filtering
-Edge-First Safety -> STM32 local evaluation for offline-critical alerts
-Glassmorphism Ul -> Modem dark/light theme with smooth Framer Motion animations
+    Role-Based Dashboards -> Tailored views for Driver, Mechanic, and Fleet Manager
+    Real-Time Sync -> Live data updates every 3 seconds via Firebase RTDB
+    Predictive Health Al -> Custom RL model forecasts component failures (1-45 days)
+    Context-Aware Thresholds -> Adaptive limits for City vs. Highway driving modes
+    Explainable Alerts -> Natural-language wamings with actionable guidance
+    PDF Service Analysis -> LLM-powered extraction of insights from service reports
+    Mechanic Locator -> Interactive OpenStreetMap with specialized shop filtering
+    Edge-First Safety -> STM32 local evaluation for offline-critical alerts
+    Glassmorphism Ul -> Modem dark/light theme with smooth Framer Motion animations
 
-Core Framework
+Core Framework:
 
-Nextjs -> App Router, Server Components, API Routes
-React -> Ul library with hooks and concurrent features
-TypeScript -> End-to-end type safety and interface definitions
+    Nextjs -> App Router, Server Components, API Routes
+    React -> Ul library with hooks and concurrent features
+    TypeScript -> End-to-end type safety and interface definitions
 
-Styling & UI
+Styling & UI:
 
-Tailwind CSS -> Utility-first styling with custom glassmorphism effects
-Framer Motion -> Production-ready animations and page transitions
-Lucide React -> Consistent, accessible iconography
+    Tailwind CSS -> Utility-first styling with custom glassmorphism effects
+    Framer Motion -> Production-ready animations and page transitions
+    Lucide React -> Consistent, accessible iconography
 
-Data Visualization & Maps
+Data Visualization & Maps :
 
-Recharts -> Interactive health trends, radar charts, and analytics
-Leaflet + OpenStreetMap -> Interactive mechanic shop locator with real-time positioning
+    Recharts -> Interactive health trends, radar charts, and analytics
+    Leaflet + OpenStreetMap -> Interactive mechanic shop locator with real-time positioning
 
-Backend & Database
+Backend & Database:
 
-Nextjs API Routes -> RESTful  endpoints for vehicle, alert, and leaming operations
-Prisma ORM -> Type-safe database queries and schema management
-SQLite -> Local development database with easy migration path
-Firebase Realtime Database -> Production cloud sync for STM32 telemetry
+    Nextjs API Routes -> RESTful  endpoints for vehicle, alert, and leaming operations
+    Prisma ORM -> Type-safe database queries and schema management
+    SQLite -> Local development database with easy migration path
+    Firebase Realtime Database -> Production cloud sync for STM32 telemetry
 
-AI & Machine Learning
+AI & Machine Learning:
 
-RL Engine -> Reinforcement leaming for health prediction and pattem recognition
-LLM SDK Integration -> Natural language analysis of uploaded PDF service reports
+    RL Engine -> Reinforcement leaming for health prediction and pattem recognition
+    LLM SDK Integration -> Natural language analysis of uploaded PDF service reports
+
+    
