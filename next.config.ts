@@ -1,12 +1,7 @@
 import type { NextConfig } from "next";
-
 const nextConfig: NextConfig = {
-  output: "standalone",
-  /* config options here */
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  reactStrictMode: false,
+  serverExternalPackages: ['pdfjs-dist', 'z-ai-web-dev-sdk'],
+  turbopack: {},
 };
 
 export default nextConfig;

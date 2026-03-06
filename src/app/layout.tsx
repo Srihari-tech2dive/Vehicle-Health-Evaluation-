@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   keywords: ["Vehicle Health", "Fleet Management", "Diagnostics", "AI", "Predictive Maintenance"],
   authors: [{ name: "Vehicle Health Team" }],
   icons: {
-    icon: "/logo.svg",
+    icon: "/pic_vit.png",
   },
   openGraph: {
     title: "Vehicle Health Evaluation System",

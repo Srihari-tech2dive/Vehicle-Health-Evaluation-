@@ -67,6 +67,15 @@ export function DriverView({
   const [pdfAnalysisResult, setPdfAnalysisResult] = useState<PDFAnalysisResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // src/components/roles/DriverView.tsx
+
+  // ✅ ADD THESE STATE VARIABLES
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<any>(null);
+  const [pdfPreview, setPdfPreview] = useState<string>('');
+  const [fullPdfText, setFullPdfText] = useState<string>('');
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
   
   const [feedbackForm, setFeedbackForm] = useState({
     driverName: '',
@@ -334,6 +343,7 @@ export function DriverView({
           {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           {soundEnabled ? 'Sound On' : 'Sound Off'}
         </button>
+        
         
         <motion.button
           onClick={() => fileInputRef.current?.click()}
