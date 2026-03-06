@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
@@ -14,12 +13,12 @@ import { ConnectionStatusIndicator, DataFlowIndicator, FirebaseStatusBadge } fro
 import { useRealtimeAllVehicles, useFirebaseStatus, useRLNotifications } from '@/hooks/useRealtimeVehicleData';
 import type { ConnectionStatus } from '@/lib/firebase-config';
 import dynamic from 'next/dynamic';
-import { 
-  Car, 
-  Truck, 
-  Bike, 
-  User, 
-  Wrench, 
+import {
+  Car,
+  Truck,
+  Bike,
+  User,
+  Wrench,
   LayoutDashboard,
   Plus,
   X,
@@ -42,7 +41,7 @@ export default function VehicleHealthDashboard() {
   // Theme
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  
+
   // State
   const [currentRole, setCurrentRole] = useState<UserRole>('driver');
   const [currentView, setCurrentView] = useState<'role' | 'dashboard' | 'map'>('role');
@@ -53,24 +52,23 @@ export default function VehicleHealthDashboard() {
   const [learningInsights, setLearningInsights] = useState<LearningInsight[]>([]);
   const [rules, setRules] = useState<EvaluationRule[]>([]);
   const [feedbacks, setFeedbacks] = useState<DriverFeedback[]>([]);
-  
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [showAddVehicle, setShowAddVehicle] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [rlNotification, setRlNotification] = useState<{show: boolean; title: string; message: string} | null>(null);
-  
+
   // Real-time connection status
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
   const [lastDataUpdate, setLastDataUpdate] = useState<Date | null>(null);
   const { notifications: rlNotifications, addNotification: addRLNotification } = useRLNotifications();
-  
+
   // Mount check for theme
   useEffect(() => {
     setMounted(true);
   }, []);
-  
+
   // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
@@ -84,21 +82,21 @@ export default function VehicleHealthDashboard() {
           fetch('/api/rules'),
           fetch('/api/driver-feedback')
         ]);
-        
+
         const vehiclesData = await vehiclesRes.json();
         const alertsData = await alertsRes.json();
         const shopsData = await shopsRes.json();
         const insightsData = await insightsRes.json();
         const rulesData = await rulesRes.json();
         const feedbacksData = await feedbacksRes.json();
-        
+
         setVehicles(vehiclesData);
         setAlerts(alertsData);
         setMechanicShops(shopsData);
         setLearningInsights(insightsData);
         setRules(rulesData);
         setFeedbacks(feedbacksData);
-        
+
         if (vehiclesData.length > 0) {
           setSelectedVehicle(vehiclesData[0]);
         }
@@ -108,16 +106,16 @@ export default function VehicleHealthDashboard() {
         setIsLoading(false);
       }
     };
-    
+
     fetchData();
     setConnectionStatus('connected');
-    
-    // Set up real-time simulation interval (simulating Firebase RTDB updates)
-    const interval = setInterval(simulateUpdates, 3000); // Faster updates for real-time feel
+
+    // Set up real-time simulation interval
+    const interval = setInterval(simulateUpdates, 3000);
     return () => clearInterval(interval);
   }, []);
-  
-  // Simulate real-time updates (simulating Firebase RTDB data from STM32)
+
+  // Simulate real-time updates
   const simulateUpdates = async () => {
     try {
       setConnectionStatus('connecting');
@@ -136,7 +134,7 @@ export default function VehicleHealthDashboard() {
       setConnectionStatus('error');
     }
   };
-  
+
   // Acknowledge alert
   const handleAcknowledgeAlert = useCallback(async (alertId: string) => {
     try {
@@ -150,11 +148,10 @@ export default function VehicleHealthDashboard() {
       console.error('Failed to acknowledge alert:', error);
     }
   }, []);
-  
+
   // Toggle driving context
   const handleToggleContext = useCallback(async () => {
     if (!selectedVehicle) return;
-    
     const newContext = selectedVehicle.drivingContext === 'city' ? 'highway' : 'city';
     try {
       const res = await fetch('/api/vehicles', {
@@ -173,7 +170,7 @@ export default function VehicleHealthDashboard() {
       console.error('Failed to update context:', error);
     }
   }, [selectedVehicle]);
-  
+
   // Report issue
   const handleReportIssue = useCallback(async (data: { vehicleId: string; driverName: string; issueType: string; severity: 'low' | 'medium' | 'high' | 'critical'; description: string }) => {
     try {
@@ -188,7 +185,7 @@ export default function VehicleHealthDashboard() {
       console.error('Failed to submit feedback:', error);
     }
   }, []);
-  
+
   // Run learning
   const handleRunLearning = useCallback(async () => {
     try {
@@ -199,7 +196,7 @@ export default function VehicleHealthDashboard() {
       console.error('Failed to run learning:', error);
     }
   }, []);
-  
+
   // Toggle rule
   const handleToggleRule = useCallback(async (ruleId: string, enabled: boolean) => {
     try {
@@ -213,7 +210,7 @@ export default function VehicleHealthDashboard() {
       console.error('Failed to toggle rule:', error);
     }
   }, []);
-  
+
   // Update feedback status
   const handleUpdateFeedbackStatus = useCallback(async (feedbackId: string, status: 'pending' | 'acknowledged' | 'resolved') => {
     try {
@@ -228,7 +225,7 @@ export default function VehicleHealthDashboard() {
       console.error('Failed to update feedback:', error);
     }
   }, []);
-  
+
   // Add vehicle
   const handleAddVehicle = useCallback(async (vehicleData: {
     name: string;
@@ -249,7 +246,6 @@ export default function VehicleHealthDashboard() {
           vehicle: vehicleData
         })
       });
-      
       if (res.ok) {
         const newVehicle = await res.json();
         setVehicles(prev => [...prev, newVehicle]);
@@ -259,7 +255,7 @@ export default function VehicleHealthDashboard() {
       console.error('Failed to add vehicle:', error);
     }
   }, []);
-  
+
   // Remove vehicle
   const handleRemoveVehicle = useCallback(async (vehicleId: string) => {
     try {
@@ -276,7 +272,7 @@ export default function VehicleHealthDashboard() {
       console.error('Failed to remove vehicle:', error);
     }
   }, [selectedVehicle, vehicles]);
-  
+
   // Set vehicle priority
   const handleSetPriority = useCallback(async (vehicleId: string, priority: 'high' | 'medium' | 'low') => {
     try {
@@ -294,35 +290,134 @@ export default function VehicleHealthDashboard() {
       console.error('Failed to set priority:', error);
     }
   }, [selectedVehicle]);
-  
-  // Handle PDF upload result
-  const handlePDFUploaded = useCallback((result: { vehicle: Vehicle; analysis: PDFAnalysisResult; notification?: { title: string; message: string } }) => {
-    setVehicles(prev => prev.map(v => v.id === result.vehicle.id ? result.vehicle : v));
-    setSelectedVehicle(result.vehicle);
-    
-    // Add all RL insights
-    const newInsights = result.analysis.rlModelUpdate.patternsLearned.map((pattern, i) => ({
-      id: `insight-pdf-${Date.now()}-${i}`,
-      type: 'new_pattern' as const,
-      message: `RL Learned: ${pattern}`,
-      confidence: result.analysis.rlModelUpdate.confidenceLevel,
-      timestamp: new Date()
-    }));
-    setLearningInsights(prev => [...newInsights, ...prev]);
-    
-    // Show RL notification
-    if (result.notification || result.analysis.rlModelUpdate.patternsLearned.length > 0) {
-      setRlNotification({
-        show: true,
-        title: result.notification?.title || '🤖 AI Learning Updated',
-        message: result.notification?.message || `RL model learned ${result.analysis.rlModelUpdate.patternsLearned.length} new pattern(s) from service report.`
-      });
-      
-      // Auto-hide after 5 seconds
-      setTimeout(() => setRlNotification(null), 5000);
+
+  // Notification helper
+  const addNotification = useCallback((note: {
+    title: string;
+    message: string;
+    type?: 'success' | 'info' | 'warning' | 'error';
+    duration?: number;
+  }) => {
+    setRlNotification({
+      show: true,
+      title: note.title,
+      message: note.message
+    });
+    const duration = note.duration || 5000;
+    setTimeout(() => setRlNotification(null), duration);
+    console.log(`🔔 [${note.type || 'info'}] ${note.title}: ${note.message}`);
+  }, []);
+
+  // Data refetch helper
+  const refetchVehicleData = useCallback(async (vehicleId: string) => {
+    try {
+      const res = await fetch(`/api/service-history/${vehicleId}`);
+      if (res.ok) {
+        const updatedRecords = await res.json();
+        setServiceRecords(updatedRecords);
+      }
+      const alertsRes = await fetch('/api/alerts');
+      if (alertsRes.ok) {
+        const updatedAlerts = await alertsRes.json();
+        setAlerts(updatedAlerts);
+      }
+      console.log(`🔄 Refreshed data for vehicle: ${vehicleId}`);
+    } catch (error) {
+      console.error('Failed to refetch vehicle data:', error);
     }
   }, []);
-  
+
+  // Handle PDF upload result
+  const handlePDFUploaded = useCallback((result: {
+    vehicle: Vehicle;
+    analysis: PDFAnalysisResult;
+    notification?: { title: string; message: string }
+  }) => {
+    // 1️⃣ Update vehicles list with new health score
+    setVehicles(prev => prev.map(v => {
+      if (v.id === result.vehicle.id) {
+        const scoreAdjustment = result.analysis.healthImpact?.scoreAdjustment ?? 0;
+        const directHealthScore = (result.analysis as any).healthScore;
+        const newScore = directHealthScore !== undefined
+          ? directHealthScore
+          : Math.max(0, Math.min(100, (v.healthScore || 75) + scoreAdjustment));
+
+        return {
+          ...v,
+          healthScore: newScore,
+          healthStatus: newScore >= 80 ? 'good' as const : newScore >= 60 ? 'warning' as const : 'critical' as const,
+          lastServiceDate: result.analysis.extractedData?.serviceDate
+            ? new Date(result.analysis.extractedData.serviceDate)
+            : v.lastServiceDate,
+          mileage: result.analysis.extractedData?.mileage || v.mileage,
+          serviceReportAnalyzed: true
+        };
+      }
+      return v;
+    }));
+
+    // 2️⃣ Update selected vehicle
+    setSelectedVehicle(prev => {
+      if (prev?.id === result.vehicle.id) {
+        const scoreAdjustment = result.analysis.healthImpact?.scoreAdjustment ?? 0;
+        const directHealthScore = (result.analysis as any).healthScore;
+        const newScore = directHealthScore !== undefined
+          ? directHealthScore
+          : Math.max(0, Math.min(100, (prev.healthScore || 75) + scoreAdjustment));
+
+        return {
+          ...prev,
+          healthScore: newScore,
+          healthStatus: newScore >= 80 ? 'good' as const : newScore >= 60 ? 'warning' as const : 'critical' as const,
+          lastServiceDate: result.analysis.extractedData?.serviceDate
+            ? new Date(result.analysis.extractedData.serviceDate)
+            : prev.lastServiceDate,
+          mileage: result.analysis.extractedData?.mileage || prev.mileage,
+          serviceReportAnalyzed: true
+        };
+      }
+      return prev;
+    });
+
+    // 3️⃣ Show notification if provided
+    if (result.notification) {
+      setRlNotification({
+        show: true,
+        title: result.notification.title,
+        message: result.notification.message
+      });
+      setTimeout(() => setRlNotification(null), 5000);
+    }
+
+    // 4️⃣ Update learning insights with RL patterns
+    const rlUpdate = result.analysis.rlModelUpdate;
+    if (rlUpdate?.patternsLearned?.length > 0) {
+      const newInsights: LearningInsight[] = rlUpdate.patternsLearned.map((pattern, i) => ({
+        id: `rl-pdf-${Date.now()}-${i}`,
+        type: 'new_pattern' as const,
+        message: `RL Learned: ${pattern}`,
+        confidence: rlUpdate.confidenceLevel,
+        timestamp: new Date()
+      }));
+      setLearningInsights(prev => [...newInsights, ...prev].slice(0, 50));
+    }
+
+    // 5️⃣ Trigger re-fetch of service history
+    if (result.vehicle.id) {
+      fetch(`/api/service-history/${result.vehicle.id}`)
+        .then(res => res.json())
+        .then(setServiceRecords)
+        .catch(console.error);
+    }
+
+    // 6️⃣ Debug log
+    console.log('📊 PDF Analysis Applied:', {
+      vehicleId: result.vehicle.id,
+      healthScore: (result.analysis as any).healthScore ?? result.analysis.healthImpact?.scoreAdjustment,
+      patternsLearned: rlUpdate?.patternsLearned?.length || 0
+    });
+  }, []);
+
   // Fetch service records when vehicle changes
   useEffect(() => {
     if (selectedVehicle) {
@@ -332,24 +427,24 @@ export default function VehicleHealthDashboard() {
         .catch(console.error);
     }
   }, [selectedVehicle]);
-  
+
   // Role icons
   const roleIcons = {
     driver: <User className="w-5 h-5" />,
     mechanic: <Wrench className="w-5 h-5" />,
     fleet_manager: <LayoutDashboard className="w-5 h-5" />
   };
-  
+
   const roleLabels = {
     driver: 'Driver',
     mechanic: 'Mechanic',
     fleet_manager: 'Fleet Manager'
   };
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <motion.div 
+        <motion.div
           className="glass-card p-8 text-center"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -366,10 +461,10 @@ export default function VehicleHealthDashboard() {
       </div>
     );
   }
-  
+
   const criticalCount = vehicles.filter(v => v.healthStatus === 'critical').length;
   const warningCount = vehicles.filter(v => v.healthStatus === 'warning').length;
-  
+
   return (
     <div className="min-h-screen flex flex-col pb-20 md:pb-0">
       {/* Header */}
@@ -377,12 +472,12 @@ export default function VehicleHealthDashboard() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <motion.div 
+            <motion.div
               className="flex items-center gap-3"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
             >
-              <motion.div 
+              <motion.div
                 className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-purple-500 to-pink-500 flex items-center justify-center shadow-lg"
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
@@ -394,7 +489,7 @@ export default function VehicleHealthDashboard() {
                 <p className="text-xs text-muted-foreground hidden sm:block">AI-Powered Diagnostics</p>
               </div>
             </motion.div>
-            
+
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-3">
               {/* View Switcher */}
@@ -418,7 +513,7 @@ export default function VehicleHealthDashboard() {
                   </button>
                 ))}
               </div>
-              
+
               {/* Role Switcher */}
               {currentView === 'role' && (
                 <div className="flex bg-white/5 dark:bg-white/5 rounded-xl p-1 backdrop-blur-sm">
@@ -439,23 +534,23 @@ export default function VehicleHealthDashboard() {
                 </div>
               )}
             </div>
-            
+
             {/* Right side actions */}
             <div className="flex items-center gap-2">
               {/* Real-time Connection Status */}
-              <ConnectionStatusIndicator 
-                status={connectionStatus} 
+              <ConnectionStatusIndicator
+                status={connectionStatus}
                 lastUpdated={lastDataUpdate}
                 compact
               />
-              
+
               {/* Data Flow Indicator */}
               <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg bg-white/5">
                 <DataFlowIndicator isActive={connectionStatus === 'connected'} />
               </div>
-              
+
               {/* Status indicator */}
-              <motion.div 
+              <motion.div
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 dark:bg-white/5"
                 animate={criticalCount > 0 ? { scale: [1, 1.05, 1] } : {}}
                 transition={{ duration: 1, repeat: criticalCount > 0 ? Infinity : 0 }}
@@ -467,7 +562,7 @@ export default function VehicleHealthDashboard() {
                   {criticalCount > 0 ? `${criticalCount} Critical` : warningCount > 0 ? `${warningCount} Warning` : 'All Good'}
                 </span>
               </motion.div>
-              
+
               {/* Notifications */}
               <motion.button
                 className="relative p-2 rounded-xl glass-button"
@@ -482,7 +577,7 @@ export default function VehicleHealthDashboard() {
                   </span>
                 )}
               </motion.button>
-              
+
               {/* Theme Toggle */}
               {mounted && (
                 <motion.button
@@ -514,7 +609,7 @@ export default function VehicleHealthDashboard() {
                   </AnimatePresence>
                 </motion.button>
               )}
-              
+
               {/* Add Vehicle Button */}
               {vehicles.length < 6 && currentRole === 'fleet_manager' && (
                 <motion.button
@@ -527,7 +622,7 @@ export default function VehicleHealthDashboard() {
                   Add Vehicle
                 </motion.button>
               )}
-              
+
               {/* Mobile Menu Button */}
               <motion.button
                 className="md:hidden p-2 rounded-xl glass-button"
@@ -539,7 +634,7 @@ export default function VehicleHealthDashboard() {
             </div>
           </div>
         </div>
-        
+
         {/* Notifications Dropdown */}
         <AnimatePresence>
           {showNotifications && (
@@ -557,7 +652,7 @@ export default function VehicleHealthDashboard() {
                 {alerts.slice(0, 5).map(alert => (
                   <div key={alert.id} className="p-2 rounded-lg bg-white/5 flex items-start gap-2">
                     <span className={`w-2 h-2 rounded-full mt-1.5 ${
-                      alert.type === 'critical' ? 'bg-red-500' : 
+                      alert.type === 'critical' ? 'bg-red-500' :
                       alert.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
                     }`} />
                     <div className="flex-1">
@@ -574,7 +669,7 @@ export default function VehicleHealthDashboard() {
           )}
         </AnimatePresence>
       </header>
-      
+
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-6">
         <AnimatePresence mode="wait">
@@ -619,7 +714,7 @@ export default function VehicleHealthDashboard() {
               )}
             </motion.div>
           )}
-          
+
           {/* Vehicle Dashboard */}
           {currentView === 'dashboard' && (
             <motion.div
@@ -636,7 +731,7 @@ export default function VehicleHealthDashboard() {
               />
             </motion.div>
           )}
-          
+
           {/* Map View */}
           {currentView === 'map' && (
             <motion.div
@@ -654,10 +749,10 @@ export default function VehicleHealthDashboard() {
             </motion.div>
           )}
         </AnimatePresence>
-        
+
         {/* Map Section - Show for role view */}
         {currentView === 'role' && (
-          <motion.div 
+          <motion.div
             className="mt-6 h-[350px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -671,7 +766,7 @@ export default function VehicleHealthDashboard() {
           </motion.div>
         )}
       </main>
-      
+
       {/* Footer - Desktop */}
       <footer className="hidden md:block glass-card border-t border-white/10 py-4 mt-auto">
         <div className="container mx-auto px-4">
@@ -681,7 +776,6 @@ export default function VehicleHealthDashboard() {
                 <Zap className="w-4 h-4 text-primary" />
                 Vehicle Health Evaluation System v2.0
               </p>
-              {/* Firebase Status Badge */}
               <FirebaseStatusBadge status={connectionStatus} />
             </div>
             <div className="flex items-center gap-4">
@@ -701,7 +795,7 @@ export default function VehicleHealthDashboard() {
           </div>
         </div>
       </footer>
-      
+
       {/* Mobile Navigation */}
       <MobileNav
         currentView={currentView}
@@ -711,14 +805,14 @@ export default function VehicleHealthDashboard() {
         onAddVehicle={() => setShowAddVehicle(true)}
         canAddVehicle={vehicles.length < 6}
       />
-      
+
       {/* Add Vehicle Modal */}
       <AddVehicleModal
         isOpen={showAddVehicle}
         onClose={() => setShowAddVehicle(false)}
         onAdd={handleAddVehicle}
       />
-      
+
       {/* Mobile Menu */}
       <MobileMenuModal
         isOpen={showMobileMenu}
@@ -733,7 +827,7 @@ export default function VehicleHealthDashboard() {
         theme={mounted ? theme : 'dark'}
         onThemeChange={setTheme}
       />
-      
+
       {/* RL Learning Notification Toast */}
       <AnimatePresence>
         {rlNotification && (
@@ -767,7 +861,7 @@ export default function VehicleHealthDashboard() {
   );
 }
 
-// Add Vehicle Modal
+// Add Vehicle Modal Component
 function AddVehicleModal({ isOpen, onClose, onAdd }: {
   isOpen: boolean;
   onClose: () => void;
@@ -783,13 +877,13 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
     year: new Date().getFullYear(),
     mileage: 0
   });
-  
+
   const vehicleTypes = {
     car: ['sedan', 'suv', 'hatchback'],
     'two-wheeler': ['motorcycle', 'scooter'],
     heavy: ['truck', 'bus', 'van']
   };
-  
+
   const handleSubmit = () => {
     if (!formData.name || !formData.licensePlate) return;
     onAdd({
@@ -802,10 +896,10 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
       year: formData.year || undefined,
       mileage: formData.mileage || undefined
     });
-    setFormData({ 
-      name: '', 
-      type: 'sedan', 
-      category: 'car', 
+    setFormData({
+      name: '',
+      type: 'sedan',
+      category: 'car',
       licensePlate: '',
       make: '',
       model: '',
@@ -813,7 +907,7 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
       mileage: 0
     });
   };
-  
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -842,7 +936,7 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               {/* Vehicle Name */}
               <div>
@@ -855,7 +949,7 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
                   placeholder="e.g., City Cruiser"
                 />
               </div>
-              
+
               {/* License Plate */}
               <div>
                 <label className="text-sm text-muted-foreground mb-1.5 block">License Plate *</label>
@@ -867,7 +961,7 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
                   placeholder="e.g., AB-1234"
                 />
               </div>
-              
+
               {/* Category */}
               <div>
                 <label className="text-sm text-muted-foreground mb-1.5 block">Category</label>
@@ -890,7 +984,7 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
                   ))}
                 </div>
               </div>
-              
+
               {/* Type */}
               <div>
                 <label className="text-sm text-muted-foreground mb-1.5 block">Type</label>
@@ -910,7 +1004,7 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
                   ))}
                 </div>
               </div>
-              
+
               {/* Make & Model */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -934,7 +1028,7 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
                   />
                 </div>
               </div>
-              
+
               {/* Year & Mileage */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -962,7 +1056,7 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex gap-3 mt-6">
               <button
                 onClick={onClose}
@@ -987,7 +1081,7 @@ function AddVehicleModal({ isOpen, onClose, onAdd }: {
   );
 }
 
-// Mobile Menu Modal
+// Mobile Menu Modal Component
 function MobileMenuModal({ isOpen, onClose, currentRole, currentView, onRoleChange, onViewChange, theme, onThemeChange }: {
   isOpen: boolean;
   onClose: () => void;
@@ -1003,7 +1097,7 @@ function MobileMenuModal({ isOpen, onClose, currentRole, currentView, onRoleChan
     mechanic: <Wrench className="w-5 h-5" />,
     fleet_manager: <LayoutDashboard className="w-5 h-5" />
   };
-  
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -1028,7 +1122,7 @@ function MobileMenuModal({ isOpen, onClose, currentRole, currentView, onRoleChan
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             {/* Views */}
             <div className="mb-6">
               <p className="text-sm text-muted-foreground mb-3">View</p>
@@ -1057,7 +1151,7 @@ function MobileMenuModal({ isOpen, onClose, currentRole, currentView, onRoleChan
                 ))}
               </div>
             </div>
-            
+
             {/* Roles */}
             <div className="mb-6">
               <p className="text-sm text-muted-foreground mb-3">Role</p>
@@ -1082,7 +1176,7 @@ function MobileMenuModal({ isOpen, onClose, currentRole, currentView, onRoleChan
                 ))}
               </div>
             </div>
-            
+
             {/* Theme */}
             <div>
               <p className="text-sm text-muted-foreground mb-3">Theme</p>

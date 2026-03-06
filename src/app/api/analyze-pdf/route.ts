@@ -1,116 +1,255 @@
 // src/app/api/analyze-pdf/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import * as pdfjs from 'pdfjs-dist';
+import { PDFAnalysisResult } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
   try {
-    // 1️⃣ Parse form data
+    // 1️⃣ Dynamic import for pdf2json (ESM compatible)
+    const { default: PDFParser } = await import('pdf2json');
+    
+    // 2️⃣ Parse form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const vehicleId = formData.get('vehicleId') as string || 'unknown';
+    const vehicleId = formData.get('vehicleId') as string;
     
-    // 2️⃣ Validate input
-    if (!file) {
-      return NextResponse.json(
-        { success: false, error: 'No file provided' },
-        { status: 400 }
-      );
-    }
-    
-    if (file.type !== 'application/pdf') {
-      return NextResponse.json(
-        { success: false, error: 'Only PDF files are allowed' },
-        { status: 400 }
-      );
+    // 3️⃣ Validate
+    if (!file || file.type !== 'application/pdf' || !vehicleId) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Valid PDF and vehicleId required' 
+      }, { status: 400 });
     }
 
-    // 3️⃣ Convert file to buffer
+    // 4️⃣ Convert to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 4️⃣ Set pdfjs worker path (required for server-side usage)
-    pdfjs.GlobalWorkerOptions.workerSrc = require.resolve(
-      'pdfjs-dist/legacy/build/pdf.worker.min.js'
-    );
-
-    // 5️⃣ Extract text from PDF
-    const pdfText = await extractPDFText(buffer);
+    // 5️⃣ Extract text using pdf2json WITH ERROR HANDLING
+    let pdfText = '';
+    let pageCount = 0;
     
-    // 6️⃣ Generate mock analysis (replace with real LLM later)
-    const analysis = {
-      summary: `Successfully processed ${file.name}. Extracted ${pdfText.length} characters.`,
-      healthScore: Math.floor(Math.random() * 20) + 70, // 70-90 for demo
-      alerts: [],
-      recommendations: [
-        "Review extracted data for accuracy",
-        "Schedule routine maintenance check",
-        "Monitor fluid levels regularly"
-      ],
+    try {
+      const result = await extractTextWithPdf2json(buffer, PDFParser);
+      pdfText = result.text || '';
+      pageCount = result.pages || 1;
+    } catch (extractError: any) {
+      console.warn('⚠️ Text extraction failed, using fallback:', extractError.message);
+      // Fallback: try simple buffer-to-string conversion for basic PDFs
+      pdfText = buffer.toString('utf-8').replace(/[\x00-\x1F\x7F-\x9F]/g, ' ').trim();
+      pageCount = 1;
+    }
+
+    // 6️⃣ Parse PDF content (with null-safety)
+    const extractedData = parseVehicleReport(pdfText || '');
+    
+    // 7️⃣ Build PDFAnalysisResult matching your interface
+    const analysis: PDFAnalysisResult = {
+      vehicleId,
+      analyzedAt: new Date(),
+      extractedData: {
+        serviceDate: extractedData.serviceDate,
+        mileage: extractedData.mileage,
+        serviceType: extractedData.serviceType,
+        issuesFound: extractedData.issuesFound,
+        componentsReplaced: extractedData.componentsReplaced,
+        nextServiceDue: extractedData.nextServiceDue,
+        recommendations: extractedData.recommendations
+      },
+      healthImpact: {
+        scoreAdjustment: extractedData.healthScore ? extractedData.healthScore - 75 : 0,
+        affectedComponents: extractedData.componentsReplaced || [],
+        predictedIssues: extractedData.healthScore && extractedData.healthScore < 70 
+          ? ['Consider brake pad replacement soon', 'Monitor battery health'] 
+          : []
+      },
+      insights: [
+        `Service completed on ${extractedData.serviceDate || 'unknown date'}`,
+        `Health score: ${extractedData.healthScore || 'N/A'}/100`,
+        `${extractedData.componentsReplaced?.length || 0} component(s) serviced`
+      ].filter(Boolean),
       rlModelUpdate: {
-        patternsLearned: [],
-        confidenceLevel: 0.85
+        patternsLearned: [
+          extractedData.serviceType ? `Service type: ${extractedData.serviceType}` : '',
+          extractedData.healthScore ? `Health score recorded: ${extractedData.healthScore}/100` : '',
+          ...(extractedData.componentsReplaced?.map((c: string) => `Component serviced: ${c}`) || []),
+          ...(extractedData.issuesFound?.map((i: string) => `Issue noted: ${i}`) || [])
+        ].filter(Boolean),
+        confidenceLevel: 0.92
       }
     };
 
-    // 7️⃣ Return complete response
+    // 8️⃣ Return response
     return NextResponse.json({
       success: true,
-      file: {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified
+      vehicle: {
+        id: vehicleId,
+        name: extractedData.vehicleName || 'Unknown Vehicle'
       },
-      pdf: {
-        text: pdfText,
-        preview: pdfText.substring(0, 500),
-        charCount: pdfText.length,
-        wordCount: pdfText.trim().split(/\s+/).filter(w => w).length
-      },
-      analysis: analysis,
-      message: "PDF analyzed successfully"
+      analysis,
+      notification: {
+        title: '✓ Analysis Complete',
+        message: extractedData.healthScore 
+          ? `${extractedData.vehicleName || 'Vehicle'} health score: ${extractedData.healthScore}/100`
+          : 'Service report processed successfully'
+      }
     });
 
   } catch (error: any) {
-    console.error('❌ PDF Analysis Error:', {
+    console.error('❌ PDF API Error:', {
       message: error.message,
-      stack: error.stack,
-      name: error.name
+      stack: error.stack
     });
     
-    // Return structured error for frontend handling
     return NextResponse.json(
       { 
-        success: false,
+        success: false, 
         error: error.message || 'Failed to analyze PDF',
-        details: process.env.NODE_ENV === 'development' ? {
-          name: error.name,
-          stack: error.stack
-        } : undefined
+        analysis: {
+          vehicleId: '',
+          analyzedAt: new Date(),
+          extractedData: {},
+          healthImpact: { scoreAdjustment: 0, affectedComponents: [], predictedIssues: [] },
+          insights: [],
+          rlModelUpdate: { patternsLearned: [], confidenceLevel: 0 }
+        } as PDFAnalysisResult
       },
       { status: 500 }
     );
   }
 }
 
-// Helper: Extract text using pdfjs-dist
-async function extractPDFText(buffer: Buffer): Promise<string> {
-  try {
-    const pdf = await pdfjs.getDocument(new Uint8Array(buffer)).promise;
-    let fullText = '';
+// Helper: Extract text using pdf2json (with Promise wrapper)
+async function extractTextWithPdf2json(buffer: Buffer, PDFParser: any): Promise<{ text: string; pages: number }> {
+  return new Promise((resolve, reject) => {
+    const pdfParser = new PDFParser();
     
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      const page = await pdf.getPage(pageNum);
-      const content = await page.getTextContent();
-      const pageText = content.items
-        .map((item: any) => item.str)
-        .join(' ');
-      fullText += pageText + '\n';
+    pdfParser.on('pdfParser_dataReady', (pdfData: any) => {
+      try {
+        let fullText = '';
+        const pages = pdfData.Pages?.length || 0;
+        
+        for (let pageNum = 0; pageNum < pages; pageNum++) {
+          const page = pdfData.Pages[pageNum];
+          if (page?.Texts) {
+            const pageText = page.Texts.map((textItem: any) => {
+              return textItem.R?.map((r: any) => {
+                try {
+                  return decodeURIComponent(r.T || '');
+                } catch {
+                  return r.T || ''; // Fallback if decode fails
+                }
+              }).join(' ') || '';
+            }).join(' ');
+            fullText += pageText + '\n';
+          }
+        }
+        resolve({ text: fullText.trim(), pages });
+      } catch (error: any) {
+        reject(error);
+      }
+    });
+    
+    pdfParser.on('pdfParser_dataError', (err: any) => {
+      reject(new Error(`PDF parsing error: ${err.parserError || 'Unknown error'}`));
+    });
+    
+    // Parse the buffer
+    try {
+      pdfParser.parseBuffer(buffer);
+    } catch (parseError: any) {
+      reject(parseError);
     }
-    
-    return fullText.trim();
-  } catch (error) {
-    console.error('Text extraction failed:', error);
-    throw new Error('Could not extract text from PDF');
+  });
+}
+
+// Helper: Parse your specific PDF format (NULL-SAFE)
+function parseVehicleReport(text: string) {
+  // Ensure text is a valid string
+  if (!text || typeof text !== 'string') {
+    return {
+      vehicleName: 'Unknown',
+      serviceDate: undefined,
+      healthScore: 75, // Default baseline
+      componentsReplaced: [],
+      issuesFound: [],
+      recommendations: ['Unable to extract detailed data - please review manually']
+    };
   }
+
+  const result: {
+    vehicleName?: string;
+    serviceDate?: string;
+    mileage?: number;
+    serviceType?: string;
+    issuesFound?: string[];
+    componentsReplaced?: string[];
+    nextServiceDue?: string;
+    recommendations?: string[];
+    healthScore?: number;
+  } = {};
+
+  try {
+    // Extract vehicle name (safe match)
+    const vehicleMatch = text.match(/Vehicle:\s*([^\n]+)/i);
+    if (vehicleMatch?.[1]) {
+      result.vehicleName = vehicleMatch[1].trim();
+    }
+
+    // Extract service date
+    const dateMatch = text.match(/Date:\s*([^\n]+)/i);
+    if (dateMatch?.[1]) {
+      result.serviceDate = dateMatch[1].trim();
+    }
+
+    // Extract health score (safe)
+    const scoreMatch = text.match(/Health Score:\s*(\d+)/i);
+    if (scoreMatch?.[1]) {
+      result.healthScore = parseInt(scoreMatch[1], 10);
+    }
+
+    // Extract service details (lines starting with "-")
+    const lines = text.split('\n').filter(line => line.trim());
+    const serviceLines = lines.filter(line => line.trim().startsWith('-'));
+    const services = serviceLines.map(s => s.replace(/^-\s*/, '').trim()).filter(s => s);
+    
+    // Categorize services
+    const components: string[] = [];
+    const issues: string[] = [];
+    
+    services.forEach(service => {
+      const lower = service.toLowerCase();
+      if (lower.includes('change') || lower.includes('replacement') || lower.includes('rotation') || lower.includes('inspection') || lower.includes('test') || lower.includes('diagnostic')) {
+        components.push(service);
+      }
+      if (lower.includes('warning') || lower.includes('issue') || lower.includes('failed') || lower.includes('error')) {
+        issues.push(service);
+      }
+    });
+    
+    result.componentsReplaced = components.length > 0 ? components : undefined;
+    result.issuesFound = issues.length > 0 ? issues : undefined;
+    result.serviceType = services.length > 0 ? services.join(', ') : undefined;
+    
+    // Generate recommendations based on health score
+    if (result.healthScore !== undefined) {
+      const recs: string[] = [];
+      if (result.healthScore < 70) recs.push('Schedule comprehensive inspection');
+      if (result.healthScore < 60) recs.push('Consider component replacement');
+      if (result.healthScore >= 80) recs.push('Continue regular maintenance schedule');
+      if (recs.length > 0) result.recommendations = recs;
+    }
+  } catch (parseError: any) {
+    console.warn('⚠️ PDF parse error, using defaults:', parseError.message);
+    // Return safe defaults
+    return {
+      vehicleName: 'Unknown',
+      serviceDate: undefined,
+      healthScore: 75,
+      componentsReplaced: [],
+      issuesFound: [],
+      recommendations: ['Parse error - please review PDF manually']
+    };
+  }
+
+  return result;
 }
